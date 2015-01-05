@@ -11,7 +11,10 @@ ZSH_THEME="robbyrussell"
 # CASE_SENSITIVE="true"
 
 # Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
+DISABLE_AUTO_UPDATE="true"
+
+# Uncomment the following line to disable prompt updates.
+DISABLE_UPDATE_PROMPT=true
 
 # Uncomment the following line to change how often to auto-update (in days).
 # export UPDATE_ZSH_DAYS=13
@@ -20,23 +23,23 @@ ZSH_THEME="robbyrussell"
 # DISABLE_LS_COLORS="true"
 
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
+ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
 # much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# HIST_STAMPS="mm/dd/yyyy"
+HIST_STAMPS="mm-dd-yyyy"
 
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
@@ -45,36 +48,168 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git zsh-syntax-highlighting zsh-history-substring-search zaw common-aliases)
 
 # User configuration
 
-export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games"
 # export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh
 
 # You may need to manually set your language environment
-# export LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
-# if [[ -n $SSH_CONNECTION ]]; then
-#   export EDITOR='vim'
-# else
-#   export EDITOR='mvim'
-# fi
+ if [[ -n $SSH_CONNECTION ]]; then
+   export EDITOR='nano'
+ else
+   export EDITOR='vim'
+ fi
 
 # Compilation flags
-# export ARCHFLAGS="-arch x86_64"
+export ARCHFLAGS="-arch x86_64"
 
 # ssh
-# export SSH_KEY_PATH="~/.ssh/dsa_id"
+export SSH_KEY_PATH="~/.ssh/dsa_id"
 
-# Set personal aliases, overriding those provided by oh-my-zsh libs,
-# plugins, and themes. Aliases can be placed here, though oh-my-zsh
-# users are encouraged to define aliases within the ZSH_CUSTOM folder.
-# For a full list of active aliases, run `alias`.
-#
-# Example aliases
-# alias zshconfig="mate ~/.zshrc"
-# alias ohmyzsh="mate ~/.oh-my-zsh"
+# Set Personal Aliases
+source $ZSH/custom/aliases/basic_aliases
+
+# More Configurations
+autoload -U promptinit
+promptinit
+
+##
+# Completion
+##
+autoload -U compinit
+compinit
+zmodload -i zsh/complist        
+setopt hash_list_all            # hash everything before completion
+setopt completealiases          # complete alisases
+setopt always_to_end            # when completing from the middle of a word, move the cursor to the end of the word    
+setopt complete_in_word         # allow completion from within a word/phrase
+setopt correct                  # spelling correction for commands
+setopt list_ambiguous           # complete as much of a completion until it gets ambiguous.
+
+zstyle ':completion::complete:*' use-cache on               # completion caching, use rehash to clear
+zstyle ':completion:*' cache-path ~/.oh-my-zsh/cache        # cache path
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'   # ignore case
+zstyle ':completion:*' menu select=2                        # menu if nb items > 2
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}       # colorz !
+zstyle ':completion:*::::' completer _expand _complete _ignored _approximate # list of completers to use
+
+# sections completion !
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:descriptions' format $'\e[00;34m%d'
+zstyle ':completion:*:messages' format $'\e[00;31m%d'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:manuals' separate-sections true
+
+zstyle ':completion:*:processes' command 'ps -au$USER'
+zstyle ':completion:*:*:kill:*' menu yes select
+zstyle ':completion:*:kill:*' force-list always
+zstyle ':completion:*:*:kill:*:processes' list-colors "=(#b) #([0-9]#)*=29=34"
+zstyle ':completion:*:*:killall:*' menu yes select
+zstyle ':completion:*:killall:*' force-list always
+users=(jackleaks root)           # because I don't care about others
+zstyle ':completion:*' users $users
+
+##
+# Key bindings
+##
+# Lookup in /etc/termcap or /etc/terminfo else, you can get the right keycode
+# by typing ^v and then type the key or key combination you want to use.
+# "man zshzle" for the list of available actions
+bindkey -e                      # emacs keybindings
+bindkey '\e[1;5C' forward-word            # C-Right
+bindkey '\e[1;5D' backward-word           # C-Left
+bindkey '\e[2~'   overwrite-mode          # Insert
+bindkey '\e[3~'   delete-char             # Del
+bindkey '\e[5~'   history-search-backward # PgUp
+bindkey '\e[6~'   history-search-forward  # PgDn
+bindkey '^A'      beginning-of-line       # Home
+bindkey '^D'      delete-char             # Del
+bindkey '^E'      end-of-line             # End
+bindkey '^R'      history-incremental-pattern-search-backward
+
+## I modified this to allow for 2,000 entries instead of 200.
+HISTSIZE=2000
+HISTFILE=~/.zsh_history
+SAVEHIST=2000
+setopt append_history           # append
+setopt hist_ignore_all_dups     # no duplicate
+unsetopt hist_ignore_space      # ignore space prefixed commands
+setopt hist_reduce_blanks       # trim blanks
+setopt hist_verify              # show before executing history commands
+setopt inc_append_history       # add commands as they are typed, don't wait until shell exit 
+setopt share_history            # share hist between sessions
+setopt bang_hist                # !keyword
+
+## These next 2 lines are from compinstall.
+zstyle ':completion:*' completer _expand _complete _correct _approximate
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+
+zstyle ':completion:*:options' description 'yes'
+zstyle ':completion:*:options' auto-description '%d'
+
+# Path Options
+fpath=($ZSH/custom/zsh-completions/src $fpath)
+
+autoload -U colors zsh-mime-setup select-word-style
+colors          # colors
+zsh-mime-setup  # run everything as if it's an executable
+select-word-style bash # ctrl+w on words
+
+##
+# Vcs info
+##
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' enable git svn hg
+zstyle ':vcs_info:*' check-for-changes true
+zstyle ':vcs_info:*' formats "%{$fg[yellow]%}%c%{$fg[green]%}%u%{$reset_color%} [%{$fg[blue]%}%b%{$reset_color%}] %{$fg[yellow]%}%s%{$reset_color%}:%r"
+zstyle ':vcs_info:git*+set-message:*' hooks git-st git-stash
+zstyle ':vcs_info:git*:*' get-revision true
+zstyle ':vcs_info:git*' formats "(%s) %12.12i %c%u %b%m"
+zstyle ':vcs_info:git*' actionformats "(%s|%a) %12.12i %c%u %b%m"
+zstyle ':vcs_info:git*+set-message:*' hooks git-st git-stash
+precmd() {  # run before each prompt
+  vcs_info
+}
+
+##
+# Prompt
+##
+setopt PROMPT_SUBST     # allow funky stuff in prompt
+color="blue"
+if [ "$USER" = "root" ]; then
+    color="red"         # root is red, user is blue
+fi;
+
+prompt="%{$fg[$color]%}%n%{$reset_color%}@%U%{$fg[yellow]%}%m%{$reset_color%}%u %B%~%b "
+RPROMPT='${vim_mode} ${vcs_info_msg_0_}'
+
+##
+# Various
+##
+setopt auto_cd                  # if command is a path, cd into it
+setopt auto_remove_slash        # self explicit
+setopt chase_links              # resolve symlinks
+setopt correct                  # try to correct spelling of commands
+setopt extended_glob            # activate complex pattern globbing
+setopt glob_dots                # include dotfiles in globbing
+setopt print_exit_value         # print return value if non-zero
+unsetopt beep                   # no bell on error
+unsetopt bg_nice                # no lower prio for background jobs
+unsetopt clobber                # must use >| to truncate existing files
+unsetopt hist_beep              # no bell on error in history
+unsetopt hup                    # no hup signal at shell exit
+unsetopt ignore_eof             # do not exit on end-of-file
+unsetopt list_beep              # no bell on ambiguous completion
+unsetopt rm_star_silent         # ask for confirmation for `rm *' or `rm path/*'
+print -Pn "\e]0; %n@%M: %~\a"   # terminal title
+
+watch=all                       # watch all logins
+logcheck=30                     # every 30 seconds
+WATCHFMT="%n from %M has %a tty%l at %T %W"
